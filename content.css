@@ -1,5 +1,6 @@
 .ai-reply-wrapper {
   display: inline-flex;
+  gap: 6px;
   position: relative;
   margin-right: 8px;
 }
@@ -30,6 +31,21 @@
 .ai-reply-btn:disabled {
   opacity: 0.7;
   cursor: wait;
+}
+
+.ai-reply-btn--spell {
+  border-color: #057642;
+  color: #057642;
+}
+
+.ai-reply-btn--spell:hover {
+  background: #057642;
+  color: white;
+}
+
+.ai-reply-btn--spell .ai-reply-spinner {
+  border-color: #057642;
+  border-top-color: transparent;
 }
 
 .ai-reply-btn svg {

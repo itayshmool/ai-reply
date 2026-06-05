@@ -14,21 +14,28 @@ const TONE_PROMPTS = {
     "Rephrase this LinkedIn reply to sound confident and assertive. Make the point clearly and with authority.",
 };
 
+const SPELLCHECK_PROMPT =
+  "Fix all spelling, grammar, and punctuation errors in this LinkedIn reply. Do NOT change the tone, meaning, or wording beyond what is needed to correct errors. If the text is already correct, return it unchanged.";
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "rephrase") {
     handleRephrase(request.text, request.tone).then(sendResponse);
     return true;
   }
+  if (request.action === "spellcheck") {
+    handleRephrase(request.text, null, SPELLCHECK_PROMPT).then(sendResponse);
+    return true;
+  }
 });
 
-async function handleRephrase(text, tone) {
+async function handleRephrase(text, tone, overridePrompt) {
   const { apiKey } = await chrome.storage.sync.get("apiKey");
 
   if (!apiKey) {
     return { error: "API key not set. Click the extension icon to configure." };
   }
 
-  const systemPrompt = TONE_PROMPTS[tone] || TONE_PROMPTS.professional;
+  const systemPrompt = overridePrompt || TONE_PROMPTS[tone] || TONE_PROMPTS.professional;
 
   try {
     const response = await fetch(CLAUDE_API_URL, {

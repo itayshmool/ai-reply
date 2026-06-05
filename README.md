@@ -4,9 +4,9 @@ Chrome extension that rephrases your LinkedIn replies using Claude AI. Write a r
 
 ## Features
 
-- **Inline button** — appears next to LinkedIn reply/comment boxes
-- **Multiple tones** — Professional, Casual, Friendly, Concise, Assertive
-- **Powered by Claude** — uses Anthropic's Claude API for high-quality rephrasing
+- **Rephrase** — inline button with multiple tones: Professional, Casual, Friendly, Concise, Assertive
+- **Spell Check** — dedicated button to fix spelling, grammar, and punctuation without changing your tone
+- **Powered by Claude** — uses Anthropic's Claude API for high-quality results
 - **Preserves context** — keeps @mentions, links, hashtags, and original language
 
 ## Install
