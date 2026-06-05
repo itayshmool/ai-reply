@@ -1,0 +1,118 @@
+.ai-reply-wrapper {
+  display: inline-flex;
+  position: relative;
+  margin-right: 8px;
+}
+
+.ai-reply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid #0a66c2;
+  border-radius: 16px;
+  background: white;
+  color: #0a66c2;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.ai-reply-btn:hover {
+  background: #0a66c2;
+  color: white;
+}
+
+.ai-reply-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.ai-reply-btn svg {
+  flex-shrink: 0;
+}
+
+.ai-reply-dropdown {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.ai-reply-tone-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: none;
+  background: white;
+  color: #333;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.ai-reply-tone-btn:hover {
+  background: #f3f6f8;
+}
+
+.ai-reply-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #0a66c2;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ai-reply-spin 0.6s linear infinite;
+}
+
+@keyframes ai-reply-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-reply-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 500;
+  z-index: 99999;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.ai-reply-toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ai-reply-toast--success {
+  background: #0a66c2;
+  color: white;
+}
+
+.ai-reply-toast--error {
+  background: #cc1016;
+  color: white;
+}
