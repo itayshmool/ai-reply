@@ -8,6 +8,15 @@ const TONES = [
 
 const PROCESSED_ATTR = "data-ai-reply-injected";
 
+const PLATFORM = detectPlatform();
+
+function detectPlatform() {
+  const host = window.location.hostname;
+  if (host.includes("linkedin.com")) return "linkedin";
+  if (host.includes("x.com") || host.includes("twitter.com")) return "x";
+  return "unknown";
+}
+
 function getEditorText(editor) {
   return editor.innerText.trim();
 }
@@ -31,7 +40,7 @@ function createSpellCheckButton(editor) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "ai-reply-btn ai-reply-btn--spell";
-  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg> Spell Check`;
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg> Spell`;
   btn.title = "Fix spelling & grammar";
 
   btn.addEventListener("click", async (e) => {
@@ -41,17 +50,18 @@ function createSpellCheckButton(editor) {
 
     const text = getEditorText(editor);
     if (!text) {
-      showToast("Write a reply first, then click Spell Check", "error");
+      showToast("Write a reply first, then click Spell", "error");
       return;
     }
 
     const originalHTML = btn.innerHTML;
-    btn.innerHTML = `<span class="ai-reply-spinner"></span> Checking...`;
+    btn.innerHTML = `<span class="ai-reply-spinner"></span>`;
     btn.disabled = true;
 
     const response = await chrome.runtime.sendMessage({
       action: "spellcheck",
       text,
+      platform: PLATFORM,
     });
 
     if (response.error) {
@@ -73,6 +83,7 @@ function createSpellCheckButton(editor) {
 function createRephraseButton(editor) {
   const wrapper = document.createElement("div");
   wrapper.className = "ai-reply-wrapper";
+  wrapper.setAttribute("data-platform", PLATFORM);
   wrapper.addEventListener("click", (e) => e.stopPropagation());
   wrapper.addEventListener("mousedown", (e) => e.stopPropagation());
   wrapper.addEventListener("submit", (e) => { e.stopPropagation(); e.preventDefault(); });
@@ -138,13 +149,14 @@ async function triggerRephrase(editor, btn, tone) {
   if (!text) return;
 
   const originalHTML = btn.innerHTML;
-  btn.innerHTML = `<span class="ai-reply-spinner"></span> Rephrasing...`;
+  btn.innerHTML = `<span class="ai-reply-spinner"></span>`;
   btn.disabled = true;
 
   const response = await chrome.runtime.sendMessage({
     action: "rephrase",
     text,
     tone,
+    platform: PLATFORM,
   });
 
   if (response.error) {
@@ -176,7 +188,9 @@ function showToast(message, type) {
   }, 3000);
 }
 
-function findCommentContainer(editor) {
+// --- LinkedIn-specific logic ---
+
+function linkedinFindContainer(editor) {
   let el = editor.parentElement;
   while (el && el !== document.body) {
     const cls = el.className || "";
@@ -193,12 +207,11 @@ function findCommentContainer(editor) {
   return editor.parentElement;
 }
 
-function injectButton(editor) {
-  if (editor.hasAttribute(PROCESSED_ATTR)) return;
-  if (editor.closest(".ai-reply-wrapper")) return;
+function linkedinInject(editor) {
+  if (editor.closest('[class*="messaging"]')) return;
   if (editor.closest('[class*="msg"]')) return;
 
-  const container = findCommentContainer(editor);
+  const container = linkedinFindContainer(editor);
   if (!container) return;
   if (container.querySelector(".ai-reply-wrapper")) return;
 
@@ -206,7 +219,7 @@ function injectButton(editor) {
   const btnWrapper = createRephraseButton(editor);
 
   const submitBtn =
-    container.querySelector('button.comments-comment-box__submit-button') ||
+    container.querySelector("button.comments-comment-box__submit-button") ||
     container.querySelector('button[class*="submit"]') ||
     container.querySelector('button[type="submit"]');
 
@@ -224,7 +237,7 @@ function injectButton(editor) {
   }
 }
 
-function scanForEditors() {
+function linkedinScan() {
   const selectors = [
     'div.ql-editor[contenteditable="true"]',
     'div[contenteditable="true"][role="textbox"]',
@@ -232,14 +245,84 @@ function scanForEditors() {
     '[class*="comment"] div[contenteditable="true"]',
     '[class*="reply"] div[contenteditable="true"]',
   ];
-
-  const query = selectors.join(", ");
-  const editors = document.querySelectorAll(query);
-
+  const editors = document.querySelectorAll(selectors.join(", "));
   editors.forEach((editor) => {
-    if (editor.closest('[class*="messaging"]')) return;
-    injectButton(editor);
+    if (editor.hasAttribute(PROCESSED_ATTR)) return;
+    if (editor.closest(".ai-reply-wrapper")) return;
+    linkedinInject(editor);
   });
+}
+
+// --- X/Twitter-specific logic ---
+
+function xFindToolbar(editor) {
+  let el = editor.parentElement;
+  while (el && el !== document.body) {
+    const toolbar = el.querySelector('[data-testid="toolBar"]');
+    if (toolbar) return toolbar;
+    const group = el.querySelector('[role="group"]');
+    if (group) return group;
+    el = el.parentElement;
+  }
+  return null;
+}
+
+function xInject(editor) {
+  if (editor.closest('[data-testid="DMComposer"]')) return;
+  if (editor.closest('[data-testid="dmComposerTextInput"]')) return;
+
+  let root = editor.parentElement;
+  while (root && root !== document.body) {
+    if (
+      root.querySelector('[data-testid="toolBar"]') ||
+      root.querySelector('[role="group"]')
+    ) {
+      break;
+    }
+    root = root.parentElement;
+  }
+  if (!root || root === document.body) root = editor.parentElement;
+
+  if (root.querySelector(".ai-reply-wrapper")) return;
+
+  editor.setAttribute(PROCESSED_ATTR, "true");
+  const btnWrapper = createRephraseButton(editor);
+
+  const toolbar = xFindToolbar(editor);
+  if (toolbar) {
+    const tweetBtn = toolbar.querySelector(
+      '[data-testid="tweetButton"], [data-testid="tweetButtonInline"]'
+    );
+    if (tweetBtn) {
+      tweetBtn.parentElement.insertBefore(btnWrapper, tweetBtn);
+    } else {
+      toolbar.appendChild(btnWrapper);
+    }
+  } else {
+    root.appendChild(btnWrapper);
+  }
+}
+
+function xScan() {
+  const selectors = [
+    '[data-testid="tweetTextarea_0"] [contenteditable="true"]',
+    'div[contenteditable="true"][role="textbox"]',
+  ];
+  const editors = document.querySelectorAll(selectors.join(", "));
+  editors.forEach((editor) => {
+    if (editor.hasAttribute(PROCESSED_ATTR)) return;
+    if (editor.closest(".ai-reply-wrapper")) return;
+    if (editor.closest('[data-testid="DMComposer"]')) return;
+    if (editor.closest('[data-testid="dmComposerTextInput"]')) return;
+    xInject(editor);
+  });
+}
+
+// --- Platform router ---
+
+function scan() {
+  if (PLATFORM === "linkedin") linkedinScan();
+  else if (PLATFORM === "x") xScan();
 }
 
 document.addEventListener("click", (e) => {
@@ -248,12 +331,12 @@ document.addEventListener("click", (e) => {
   }
 });
 
-document.addEventListener("focusin", (e) => {
-  setTimeout(scanForEditors, 300);
+document.addEventListener("focusin", () => {
+  setTimeout(scan, 300);
 });
 
 const observer = new MutationObserver(() => {
-  scanForEditors();
+  scan();
 });
 
 observer.observe(document.body, {
@@ -261,6 +344,6 @@ observer.observe(document.body, {
   subtree: true,
 });
 
-scanForEditors();
+scan();
 
-console.log("[AI Reply] Extension loaded on LinkedIn");
+console.log(`[AI Reply] Extension loaded on ${PLATFORM}`);

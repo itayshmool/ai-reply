@@ -18,7 +18,7 @@
 
     .header {
       padding: 16px 20px;
-      background: linear-gradient(135deg, #0a66c2, #004182);
+      background: linear-gradient(135deg, #6b2fa0, #4a1d70);
       color: white;
     }
 
@@ -56,7 +56,7 @@
     }
 
     input[type="password"]:focus {
-      border-color: #0a66c2;
+      border-color: #6b2fa0;
     }
 
     .hint {
@@ -66,8 +66,14 @@
     }
 
     .hint a {
-      color: #0a66c2;
+      color: #6b2fa0;
       text-decoration: none;
+    }
+
+    .platforms {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #888;
     }
 
     .btn {
@@ -77,7 +83,7 @@
       margin-top: 16px;
       border: none;
       border-radius: 20px;
-      background: #0a66c2;
+      background: #6b2fa0;
       color: white;
       font-size: 14px;
       font-weight: 600;
@@ -86,7 +92,7 @@
     }
 
     .btn:hover {
-      background: #004182;
+      background: #4a1d70;
     }
 
     .status {
@@ -100,8 +106,8 @@
 
     .status--success {
       display: block;
-      background: #e8f5e9;
-      color: #2e7d32;
+      background: #f3e8ff;
+      color: #6b2fa0;
     }
 
     .status--info {
@@ -113,13 +119,14 @@
 </head>
 <body>
   <div class="header">
-    <h1>AI Reply for LinkedIn</h1>
+    <h1>AI Reply</h1>
     <p>Rephrase replies with Claude AI</p>
   </div>
   <div class="content">
     <label for="apiKey">Claude API Key</label>
     <input type="password" id="apiKey" placeholder="sk-ant-..." />
     <p class="hint">Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a></p>
+    <p class="platforms">Works on LinkedIn and X (Twitter)</p>
 
     <button class="btn" id="saveBtn">Save Key</button>
 
