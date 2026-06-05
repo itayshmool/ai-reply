@@ -1,17 +1,42 @@
 const CLAUDE_API_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-sonnet-4-6";
 
+const HUMANIZER_RULES = `
+CRITICAL — the output must read like a real human wrote it. Follow these anti-AI rules strictly:
+
+Banned words/phrases (never use): delve, crucial, pivotal, landscape, testament, underscore, foster, garner, showcase, tapestry, vibrant, nestled, groundbreaking, in today's, it's important to note, at its core, serves as, stands as, not only...but also, let's dive in, here's what you need to know, the real question is.
+
+Banned patterns:
+- Rule of three ("X, Y, and Z" lists that feel formulaic)
+- Em dash overuse — rewrite with commas or periods instead
+- Superficial -ing phrases (highlighting, underscoring, emphasizing, showcasing, fostering)
+- Copula avoidance (use "is/are/has" instead of "serves as/stands as/boasts")
+- Sycophantic openers (Great question!, Absolutely!, Certainly!)
+- Generic positive closers (exciting times ahead, the future looks bright)
+- Excessive hedging (could potentially, it might be argued that)
+- Bold-colon list items (**Label:** description)
+- Emoji decorations on bullet points
+
+Do:
+- Vary sentence length naturally. Short ones. Then a longer one that takes its time.
+- Have a point of view — don't just neutrally report.
+- Use "is" and "are" freely, not fancy substitutes.
+- Sound like a person talking, not a press release.
+- Keep it direct and specific, not vague and puffy.
+- Use contractions naturally (don't, it's, that's).
+`;
+
 const TONE_PROMPTS = {
   professional:
-    "Rephrase this LinkedIn reply to sound professional, polished, and well-articulated. Keep the core message intact.",
+    "Rephrase this LinkedIn reply to sound professional and well-articulated. Keep the core message and the author's voice intact. It should read like a sharp colleague wrote it, not a corporate template.",
   casual:
-    "Rephrase this LinkedIn reply to sound casual and natural, like a relaxed conversation between colleagues.",
+    "Rephrase this LinkedIn reply to sound casual and natural, like a relaxed conversation between colleagues. Keep the original personality.",
   friendly:
-    "Rephrase this LinkedIn reply to sound warm, friendly, and approachable while keeping it professional enough for LinkedIn.",
+    "Rephrase this LinkedIn reply to sound warm and approachable while staying professional enough for LinkedIn. Keep it genuine, not performative.",
   concise:
-    "Rephrase this LinkedIn reply to be as concise as possible. Remove filler words, get straight to the point, but keep it polite.",
+    "Rephrase this LinkedIn reply to be as short as possible. Cut filler words, get to the point, stay polite. Every word should earn its place.",
   assertive:
-    "Rephrase this LinkedIn reply to sound confident and assertive. Make the point clearly and with authority.",
+    "Rephrase this LinkedIn reply to sound confident and direct. Make the point clearly with authority. No hedging, no softening.",
 };
 
 const SPELLCHECK_PROMPT =
@@ -35,7 +60,13 @@ async function handleRephrase(text, tone, overridePrompt) {
     return { error: "API key not set. Click the extension icon to configure." };
   }
 
-  const systemPrompt = overridePrompt || TONE_PROMPTS[tone] || TONE_PROMPTS.professional;
+  const baseTone = overridePrompt || TONE_PROMPTS[tone] || TONE_PROMPTS.professional;
+  const humanize = overridePrompt ? "" : HUMANIZER_RULES;
+
+  const systemPrompt =
+    baseTone +
+    humanize +
+    "\n\nRules:\n- Return ONLY the rephrased text, nothing else.\n- Do not add quotes around the text.\n- Keep the same language as the original.\n- Preserve any @mentions, links, or hashtags.\n- Match the approximate length of the original (don't make it significantly longer).";
 
   try {
     const response = await fetch(CLAUDE_API_URL, {
@@ -49,9 +80,7 @@ async function handleRephrase(text, tone, overridePrompt) {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 1024,
-        system:
-          systemPrompt +
-          "\n\nRules:\n- Return ONLY the rephrased text, nothing else.\n- Do not add quotes around the text.\n- Keep the same language as the original.\n- Preserve any @mentions, links, or hashtags.\n- Match the approximate length of the original (don't make it significantly longer).",
+        system: systemPrompt,
         messages: [{ role: "user", content: text }],
       }),
     });

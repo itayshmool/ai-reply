@@ -29,12 +29,14 @@ function setEditorText(editor, text) {
 
 function createSpellCheckButton(editor) {
   const btn = document.createElement("button");
+  btn.type = "button";
   btn.className = "ai-reply-btn ai-reply-btn--spell";
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg> Spell Check`;
   btn.title = "Fix spelling & grammar";
 
   btn.addEventListener("click", async (e) => {
     e.stopPropagation();
+    e.stopImmediatePropagation();
     e.preventDefault();
 
     const text = getEditorText(editor);
@@ -71,8 +73,12 @@ function createSpellCheckButton(editor) {
 function createRephraseButton(editor) {
   const wrapper = document.createElement("div");
   wrapper.className = "ai-reply-wrapper";
+  wrapper.addEventListener("click", (e) => e.stopPropagation());
+  wrapper.addEventListener("mousedown", (e) => e.stopPropagation());
+  wrapper.addEventListener("submit", (e) => { e.stopPropagation(); e.preventDefault(); });
 
   const btn = document.createElement("button");
+  btn.type = "button";
   btn.className = "ai-reply-btn";
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Rephrase`;
   btn.title = "Rephrase with AI";
@@ -83,10 +89,13 @@ function createRephraseButton(editor) {
 
   TONES.forEach(({ key, label, icon }) => {
     const item = document.createElement("button");
+    item.type = "button";
     item.className = "ai-reply-tone-btn";
     item.textContent = `${icon} ${label}`;
     item.addEventListener("click", (e) => {
       e.stopPropagation();
+      e.stopImmediatePropagation();
+      e.preventDefault();
       dropdown.style.display = "none";
       triggerRephrase(editor, btn, key);
     });
@@ -95,6 +104,7 @@ function createRephraseButton(editor) {
 
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
+    e.stopImmediatePropagation();
     e.preventDefault();
 
     const text = getEditorText(editor);
